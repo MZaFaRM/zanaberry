@@ -38,16 +38,26 @@ class FaceEngine:
         self.is_blinking = False
         self.blink_start_time = 0
 
-    def register_expression(self, name, expression_instance):
-        """Registers a new expression module to the engine."""
-        self.expressions[name] = expression_instance
+    def register_expression(self, name, expression_instance, chance=0.0, duration_ms=0):
+        """Registers a new expression module to the engine with probability data."""
+        self.expressions[name] = {
+            "instance": expression_instance,
+            "chance": chance,
+            "duration_ms": duration_ms,
+        }
+
         if self.current_expression is None:
             self.set_expression(name)
 
-    def set_expression(self, name, duration_ms=0):
-        """Switches the face to a named expression. Reverts to default if duration_ms > 0."""
+    def set_expression(self, name, duration_ms=None):
+        """Switches the face to a named expression. Reverts to default after duration."""
         if name in self.expressions:
-            self.current_expression = self.expressions[name]
+            self.current_expression = self.expressions[name]["instance"]
+
+            # Use provided duration, or fallback to the registered default
+            if duration_ms is None:
+                duration_ms = self.expressions[name]["duration_ms"]
+
             if duration_ms > 0:
                 self.expression_timer_end = pygame.time.get_ticks() + duration_ms
             else:
@@ -74,8 +84,11 @@ class FaceEngine:
 
             # Blinking Logic
             # (Only blink if we are in the normal state)
+            default_expr_instance = self.expressions.get(
+                self.default_expression, {}
+            ).get("instance")
             if (
-                self.current_expression == self.expressions.get(self.default_expression)
+                self.current_expression == default_expr_instance
                 and not self.is_blinking
                 and current_time > self.next_blink_time
             ):
@@ -103,11 +116,15 @@ class FaceEngine:
                 self.target_x = random.randint(-self.max_move_x, self.max_move_x)
                 self.target_y = random.randint(-self.max_move_y, self.max_move_y)
 
-                # 25% chance to do a happy squint
-                if random.random() > 0.75:
-                    self.set_expression("happy", duration_ms=1500)
+                for name, data in self.expressions.items():
+                    if (
+                        name != self.default_expression
+                        and data["chance"] > 0
+                        and random.random() < data["chance"]
+                    ):
+                        self.set_expression(name)
+                        break
 
-                # 30% chance to reset to center
                 if random.random() > 0.7:
                     self.target_x, self.target_y = 0, 0
 

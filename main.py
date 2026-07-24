@@ -6,7 +6,7 @@ if __name__ == "__main__":
     engine = FaceEngine()
 
     engine.register_expression("normal", Normal())
-    engine.register_expression("happy", Happy())
+    engine.register_expression("happy", Happy(), chance=0.25, duration_ms=1500)
 
 
     engine.run()
