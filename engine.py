@@ -1,4 +1,3 @@
-# engine.py
 import random
 import sys
 

@@ -1,4 +1,3 @@
-# main.py
 from engine import FaceEngine
 from expressions.happy import Happy
 from expressions.normal import Normal
