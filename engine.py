@@ -13,7 +13,6 @@ class FaceEngine:
         self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
         self.width, self.height = self.screen.get_size()
         self.center_x, self.center_y = self.width // 2, self.height // 2
-        pygame.display.set_caption("Z.AI Face Engine")
         pygame.mouse.set_visible(False)
         self.clock = pygame.time.Clock()
 
