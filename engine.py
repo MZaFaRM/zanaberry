@@ -10,7 +10,7 @@ from settings import *
 class FaceEngine:
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        self.screen = pygame.display.set_mode((0, 0))
         self.width, self.height = self.screen.get_size()
         self.center_x, self.center_y = self.width // 2, self.height // 2
         pygame.mouse.set_visible(False)
