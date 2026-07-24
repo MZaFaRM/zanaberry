@@ -3,9 +3,9 @@ BLACK = (0, 0, 0)
 CYAN = (0, 255, 204)
 
 # Eye Settings
-EYE_WIDTH = 90     
-EYE_HEIGHT = 160   
-EYE_GAP = 60       
+EYE_WIDTH = 60     
+EYE_HEIGHT = 100   
+EYE_GAP = 40       
 
 # Animation Settings
 SMOOTHING_SPEED = 0.08
