@@ -22,7 +22,7 @@ class DefaultState(State):
         }
         context.expressions["happy"] = {
             "instance": self.happy,
-            "chance": 0.25,
+            "chance": 0.1,
             "duration_ms": 1500,
         }
         context.expressions["curious"] = {
