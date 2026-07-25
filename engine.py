@@ -142,9 +142,9 @@ class FaceEngine:
             target_name = context.expression_override or self.active_expression_name
             expression_data = context.expressions.get(target_name)
 
-            if expression_data and expression_data["instance"]:
-                expr = expression_data["instance"]
-                expr.draw_eye(
+            if expression_data and expression_data["draw_fn"]:
+                draw_func = expression_data["draw_fn"]
+                draw_func(
                     self.screen,
                     left_x,
                     base_y,
@@ -152,7 +152,7 @@ class FaceEngine:
                     current_eye_height,
                     context.color,
                 )
-                expr.draw_eye(
+                draw_func(
                     self.screen,
                     right_x,
                     base_y,
