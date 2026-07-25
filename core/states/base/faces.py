@@ -1,4 +1,4 @@
-class Expression:
+class Face:
     def draw_eye(self, surface, x, y, width, height, color):
         """
         Blueprint for drawing an eye.

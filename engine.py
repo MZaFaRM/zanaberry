@@ -3,12 +3,16 @@ import sys
 
 import pygame
 
+from core.manager import StateManager
 from settings import *
 
 
 class FaceEngine:
-    def __init__(self):
+    def __init__(self, states=None):
         pygame.init()
+        pygame.font.init()
+        self.font = pygame.font.SysFont(None, 36)
+
         self.screen = pygame.display.set_mode((0, 0))
         self.width, self.height = self.screen.get_size()
         self.center_x, self.center_y = self.width // 2, self.height // 2
@@ -16,50 +20,36 @@ class FaceEngine:
         self.clock = pygame.time.Clock()
 
         total_eyes_width = (EYE_WIDTH * 2) + EYE_GAP
-
         self.max_move_x = max(
             0, (self.width - total_eyes_width) // 2 - SCREEN_PADDING_X
         )
         self.max_move_y = max(0, (self.height - EYE_HEIGHT) // 2 - SCREEN_PADDING_Y)
 
-        # Expression State Management
-        self.expressions = {}
-        self.current_expression = None
+        # The engine only tracks the active name, not the instances
+        self.active_expression_name = "normal"
         self.default_expression = "normal"
         self.expression_timer_end = 0
 
-        # Physics State
+        self.state_manager = StateManager()
+        if states:
+            for state in states:
+                self.state_manager.register_state(state)
+
         self.current_x, self.current_y = 0.0, 0.0
         self.target_x, self.target_y = 0.0, 0.0
 
-        # Timers
         self.next_look_time = pygame.time.get_ticks() + 1000
         self.next_blink_time = pygame.time.get_ticks() + 4500
         self.is_blinking = False
         self.blink_start_time = 0
 
-    def register_expression(self, name, expression_instance, chance=0.0, duration_ms=0):
-        """Registers a new expression module to the engine with probability data."""
-        self.expressions[name] = {
-            "instance": expression_instance,
-            "chance": chance,
-            "duration_ms": duration_ms,
-        }
-
-        if self.current_expression is None:
-            self.set_expression(name)
-
-    def set_expression(self, name, duration_ms=None):
-        """Switches the face to a named expression. Reverts to default after duration."""
-        if name in self.expressions:
-            self.current_expression = self.expressions[name]["instance"]
-
-            # Use provided duration, or fallback to the registered default
-            if duration_ms is None:
-                duration_ms = self.expressions[name]["duration_ms"]
-
-            if duration_ms > 0:
-                self.expression_timer_end = pygame.time.get_ticks() + duration_ms
+    def trigger_expression(self, name, context):
+        """Helper to switch expressions based on context data."""
+        if name in context.expressions:
+            self.active_expression_name = name
+            duration = context.expressions[name]["duration_ms"]
+            if duration > 0:
+                self.expression_timer_end = pygame.time.get_ticks() + duration
             else:
                 self.expression_timer_end = 0
 
@@ -68,11 +58,13 @@ class FaceEngine:
         while running:
             current_time = pygame.time.get_ticks()
 
-            # Events
+            # All expressions and states are injected here
+            context = self.state_manager.resolve(current_time)
+
             for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                if event.type == pygame.QUIT or (
+                    event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE
+                ):
                     running = False
 
             # Revert Expression Timer
@@ -80,15 +72,13 @@ class FaceEngine:
                 self.expression_timer_end > 0
                 and current_time > self.expression_timer_end
             ):
-                self.set_expression(self.default_expression)
+                self.active_expression_name = self.default_expression
+                self.expression_timer_end = 0
 
             # Blinking Logic
-            # (Only blink if we are in the normal state)
-            default_expr_instance = self.expressions.get(
-                self.default_expression, {}
-            ).get("instance")
             if (
-                self.current_expression == default_expr_instance
+                context.expression_override is None
+                and self.active_expression_name == self.default_expression
                 and not self.is_blinking
                 and current_time > self.next_blink_time
             ):
@@ -113,16 +103,23 @@ class FaceEngine:
 
             # Idle Movement & Random Behaviors
             if current_time > self.next_look_time:
-                self.target_x = random.randint(-self.max_move_x, self.max_move_x)
-                self.target_y = random.randint(-self.max_move_y, self.max_move_y)
+                self.target_x = (
+                    random.randint(-self.max_move_x, self.max_move_x)
+                    * context.movement_multiplier
+                )
+                self.target_y = (
+                    random.randint(-self.max_move_y, self.max_move_y)
+                    * context.movement_multiplier
+                )
 
-                for name, data in self.expressions.items():
+                # Iterate through whatever expressions the states injected this frame
+                for name, data in context.expressions.items():
                     if (
                         name != self.default_expression
                         and data["chance"] > 0
                         and random.random() < data["chance"]
                     ):
-                        self.set_expression(name)
+                        self.trigger_expression(name, context)
                         break
 
                 if random.random() > 0.7:
@@ -141,14 +138,38 @@ class FaceEngine:
             right_x = self.center_x + (EYE_WIDTH // 2) + (EYE_GAP // 2) + self.current_x
             base_y = self.center_y + self.current_y
 
-            # Draw the active expression
-            if self.current_expression:
-                self.current_expression.draw_eye(
-                    self.screen, left_x, base_y, EYE_WIDTH, current_eye_height, CYAN
+            # Determine target expression from Context
+            target_name = context.expression_override or self.active_expression_name
+            expression_data = context.expressions.get(target_name)
+
+            if expression_data and expression_data["instance"]:
+                expr = expression_data["instance"]
+                expr.draw_eye(
+                    self.screen,
+                    left_x,
+                    base_y,
+                    EYE_WIDTH,
+                    current_eye_height,
+                    context.color,
                 )
-                self.current_expression.draw_eye(
-                    self.screen, right_x, base_y, EYE_WIDTH, current_eye_height, CYAN
+                expr.draw_eye(
+                    self.screen,
+                    right_x,
+                    base_y,
+                    EYE_WIDTH,
+                    current_eye_height,
+                    context.color,
                 )
+
+            # Render Artifacts
+            for artifact in context.artifacts:
+                if artifact["type"] == "text":
+                    text_surface = self.font.render(
+                        artifact["text"], True, artifact.get("color", (255, 255, 255))
+                    )
+                    self.screen.blit(
+                        text_surface, (artifact.get("x", 0), artifact.get("y", 0))
+                    )
 
             pygame.display.flip()
             self.clock.tick(FPS)
