@@ -4,7 +4,6 @@ from settings import CYAN
 class StateContext:
     def __init__(self):
         self.color = CYAN
-        self.movement_multiplier = 1.0
         self.expression_override = None 
         self.target_pos = None
         self.artifacts = []

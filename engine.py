@@ -63,7 +63,7 @@ class FaceEngine:
                 self.active_expression_name = self.default_expression
                 self.expression_timer_end = 0
 
-            current_eye_height = EYE_HEIGHT
+            current_eye_height = FACE_HEIGHT
 
             # Random Behaviors (Expressions only, movement removed)
             if current_time > self.next_look_time:
@@ -95,7 +95,7 @@ class FaceEngine:
                     self.screen,
                     face_x,
                     face_y,
-                    EYE_WIDTH,
+                    FACE_WIDTH,
                     current_eye_height,
                     context.color,
                 )
