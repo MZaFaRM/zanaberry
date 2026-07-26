@@ -2,50 +2,49 @@ import math
 
 import pygame
 
+from core.states.utils import check_blink
 
-def draw_tracking(surface, x, y, width, height, color):
-    mx, my = pygame.mouse.get_pos()
 
-    dx = mx - x
-    dy = my - y
-    distance = math.hypot(dx, dy)
+def draw_tracking(surface, x, y, face_width, face_height, color):
+    eye_offset = int(face_width * 0.45)
+    r = face_height // 4
+    eye_y = int(y - face_height * 0.15)
+    mouth_y = int(y + face_height * 0.25)
+    line_w = 6
 
-    if distance > 0:
-        nx = dx / distance
-        ny = dy / distance
+    if check_blink():
+        for ex in [x - eye_offset, x + eye_offset]:
+            pygame.draw.line(
+                surface, color, (ex - r, eye_y), (ex + r, eye_y), width=line_w
+            )
     else:
-        nx, ny = 0, 0
+        mx, my = pygame.mouse.get_pos()
+        for ex in [x - eye_offset, x + eye_offset]:
+            pygame.draw.circle(surface, color, (ex, eye_y), r, width=line_w)
 
-    look_intensity = min(1.0, distance / 500.0)
-    squish_factor = 1.0 - (abs(nx) * look_intensity * 0.3)
-    current_width = int(width * squish_factor)
+            dx, dy = mx - ex, my - eye_y
+            distance = math.hypot(dx, dy)
 
-    rect = pygame.Rect(
-        int(x - current_width // 2), int(y - height // 2), current_width, int(height)
-    )
-    pygame.draw.rect(surface, color, rect, border_radius=10)
+            if distance > 0:
+                nx, ny = dx / distance, dy / distance
+            else:
+                nx, ny = 0, 0
 
-    pupil_width = int(current_width * 0.4)
-    pupil_height = int(height * 0.4)
+            pupil_r = max(3, r // 3)
+            max_shift = r - pupil_r - (line_w // 2 + 1)
+            look_intensity = min(1.0, distance / 200.0)
 
-    max_shift_x = (current_width - pupil_width) / 2.2
-    max_shift_y = (height - pupil_height) / 2.2
+            cx = int(ex + nx * max_shift * look_intensity)
+            cy = int(eye_y + ny * max_shift * look_intensity)
 
-    pupil_x = x + (nx * max_shift_x * look_intensity)
-    pupil_y = y + (ny * max_shift_y * look_intensity)
+            pygame.draw.circle(surface, color, (cx, cy), pupil_r)
 
-    pupil_rect = pygame.Rect(
-        int(pupil_x - pupil_width // 2),
-        int(pupil_y - pupil_height // 2),
-        pupil_width,
-        pupil_height,
-    )
-    pygame.draw.rect(surface, (35, 35, 45), pupil_rect, border_radius=5)
-
-    highlight_r = max(2, pupil_width // 6)
-    pygame.draw.circle(
+    # Mouth
+    mouth_w = max(4, face_width // 10)
+    pygame.draw.line(
         surface,
-        (255, 255, 255),
-        (int(pupil_x - pupil_width * 0.18), int(pupil_y - pupil_height * 0.22)),
-        highlight_r,
+        color,
+        (int(x - mouth_w), mouth_y),
+        (int(x + mouth_w), mouth_y),
+        width=line_w,
     )

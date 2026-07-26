@@ -75,31 +75,7 @@ class FaceEngine:
                 self.active_expression_name = self.default_expression
                 self.expression_timer_end = 0
 
-            # Blinking Logic
-            if (
-                context.expression_override is None
-                and self.active_expression_name == self.default_expression
-                and not self.is_blinking
-                and current_time > self.next_blink_time
-            ):
-                self.is_blinking = True
-                self.blink_start_time = current_time
-                self.next_blink_time = current_time + random.randint(3000, 5000)
-
             current_eye_height = EYE_HEIGHT
-            if self.is_blinking:
-                elapsed = current_time - self.blink_start_time
-                if elapsed < 50:
-                    current_eye_height = max(
-                        10, EYE_HEIGHT - (EYE_HEIGHT * (elapsed / 50))
-                    )
-                elif elapsed < 100:
-                    current_eye_height = min(
-                        EYE_HEIGHT, 10 + (EYE_HEIGHT * ((elapsed - 50) / 50))
-                    )
-                else:
-                    self.is_blinking = False
-                    current_eye_height = EYE_HEIGHT
 
             # Idle Movement & Random Behaviors
             if current_time > self.next_look_time:
@@ -142,7 +118,6 @@ class FaceEngine:
             self.screen.fill(BLACK)
 
             left_x = self.center_x - (EYE_WIDTH // 2) - (EYE_GAP // 2) + self.current_x
-            right_x = self.center_x + (EYE_WIDTH // 2) + (EYE_GAP // 2) + self.current_x
             base_y = self.center_y + self.current_y
 
             # Determine target expression from Context
@@ -154,14 +129,6 @@ class FaceEngine:
                 draw_func(
                     self.screen,
                     left_x,
-                    base_y,
-                    EYE_WIDTH,
-                    current_eye_height,
-                    context.color,
-                )
-                draw_func(
-                    self.screen,
-                    right_x,
                     base_y,
                     EYE_WIDTH,
                     current_eye_height,

@@ -3,6 +3,7 @@ from core.states.temperature.faces import draw_tired
 
 def apply_tired_effects(context):
     # Thermal Throttling: The system is struggling and lagging
+    context.color = (255, 60, 60)  # Warning red
     context.movement_multiplier = 0.1  # Barely moving, severe lag
     context.expressions["tired"] = {
         "draw_fn": draw_tired,
