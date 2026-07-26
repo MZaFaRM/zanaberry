@@ -2,7 +2,8 @@ import pygame
 
 LAST_MOUSE_POS = (0, 0)
 LAST_MOVE_TIME = 0
-COOLDOWN_MS = 500 
+
+COOLDOWN_MS = 750
 
 
 def check_mouse_moving(current_time):
