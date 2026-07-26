@@ -19,12 +19,6 @@ class FaceEngine:
         # pygame.mouse.set_visible(False)
         self.clock = pygame.time.Clock()
 
-        total_eyes_width = (EYE_WIDTH * 2) + EYE_GAP
-        self.max_move_x = max(
-            0, (self.width - total_eyes_width) // 2 - SCREEN_PADDING_X
-        )
-        self.max_move_y = max(0, (self.height - EYE_HEIGHT) // 2 - SCREEN_PADDING_Y)
-
         # The engine only tracks the active name, not the instances
         self.active_expression_name = "normal"
         self.default_expression = "normal"
@@ -34,9 +28,6 @@ class FaceEngine:
         if states:
             for state in states:
                 self.state_manager.register_state(state)
-
-        self.current_x, self.current_y = 0.0, 0.0
-        self.target_x, self.target_y = 0.0, 0.0
 
         self.next_look_time = pygame.time.get_ticks() + 1000
         self.next_blink_time = pygame.time.get_ticks() + 4500
@@ -77,17 +68,8 @@ class FaceEngine:
 
             current_eye_height = EYE_HEIGHT
 
-            # Idle Movement & Random Behaviors
+            # Random Behaviors (Expressions only, movement removed)
             if current_time > self.next_look_time:
-                self.target_x = (
-                    random.randint(-self.max_move_x, self.max_move_x)
-                    * context.movement_multiplier
-                )
-                self.target_y = (
-                    random.randint(-self.max_move_y, self.max_move_y)
-                    * context.movement_multiplier
-                )
-
                 # Iterate through whatever expressions the states injected this frame
                 for name, data in context.expressions.items():
                     if (
@@ -98,27 +80,14 @@ class FaceEngine:
                         self.trigger_expression(name, context)
                         break
 
-                if random.random() > 0.7:
-                    self.target_x, self.target_y = 0, 0
-
                 self.next_look_time = current_time + random.randint(1000, 3500)
-
-            if (size := getattr(context, "target_pos", None)) is not None:
-                offset_x = size[0] - self.center_x
-                offset_y = size[1] - self.center_y
-
-                self.target_x = max(-self.max_move_x, min(self.max_move_x, offset_x))
-                self.target_y = max(-self.max_move_y, min(self.max_move_y, offset_y))
-
-            # Physics
-            self.current_x += (self.target_x - self.current_x) * SMOOTHING_SPEED
-            self.current_y += (self.target_y - self.current_y) * SMOOTHING_SPEED
 
             # Render
             self.screen.fill(BLACK)
 
-            left_x = self.center_x - (EYE_WIDTH // 2) - (EYE_GAP // 2) + self.current_x
-            base_y = self.center_y + self.current_y
+            # Draw exactly in the center without current_x / current_y offsets
+            left_x = self.center_x - (EYE_WIDTH // 2) - (EYE_GAP // 2)
+            base_y = self.center_y
 
             # Determine target expression from Context
             target_name = context.expression_override or self.active_expression_name
