@@ -3,7 +3,22 @@ import pygame
 
 def draw_normal(surface, x, y, width, height, color):
     rect = pygame.Rect(int(x - width // 2), int(y - height // 2), width, int(height))
-    pygame.draw.rect(surface, color, rect, border_radius=40)
+    pygame.draw.rect(surface, color, rect, border_radius=10)
+
+    pupil_width = int(width * 0.4)
+    pupil_height = int(height * 0.4)
+    pupil_rect = pygame.Rect(
+        int(x - pupil_width // 2), int(y - pupil_height // 2), pupil_width, pupil_height
+    )
+    pygame.draw.rect(surface, (35, 35, 45), pupil_rect, border_radius=5)
+
+    highlight_r = max(2, pupil_width // 6)
+    pygame.draw.circle(
+        surface,
+        (255, 255, 255),
+        (int(x - pupil_width * 0.18), int(y - pupil_height * 0.22)),
+        highlight_r,
+    )
 
 
 def draw_happy(surface, x, y, width, height, color):
@@ -17,27 +32,29 @@ DRAWING_LEFT = True
 def draw_curious(surface, x, y, width, height, color):
     global DRAWING_LEFT
 
-    if DRAWING_LEFT:
-        eye_height = max(10, height // 3)
-        rect = pygame.Rect(
-            int(x - width // 2), int(y - eye_height // 2), width, int(eye_height)
-        )
-        pygame.draw.rect(surface, color, rect, border_radius=40)
-    else:
-        rect = pygame.Rect(
-            int(x - width // 2), int(y - height // 2 - 10), width, int(height)
-        )
-        pygame.draw.rect(surface, color, rect, border_radius=40)
+    actual_height = int(height) if DRAWING_LEFT else int(height * 0.5)
 
-        brow_thick = max(4, width // 6)
-        brow_width = int(width * 1.4)
-        brow_height = int(width)
-        arc_rect = pygame.Rect(
-            int(x - brow_width // 2),
-            int(y - height // 2 - brow_height // 2 - 15),
-            brow_width,
-            brow_height,
-        )
-        pygame.draw.arc(surface, color, arc_rect, 0, 3.14159, brow_thick)
+    rect = pygame.Rect(
+        int(x - width // 2), int(y - actual_height // 2), width, actual_height
+    )
+    pygame.draw.rect(surface, color, rect, border_radius=10)
 
+    pupil_width = int(width * 0.4)
+    pupil_height = int(actual_height * 0.4)
+
+    pupil_rect = pygame.Rect(
+        int(x - pupil_width // 2), int(y - pupil_height // 2), pupil_width, pupil_height
+    )
+    pygame.draw.rect(surface, (35, 35, 45), pupil_rect, border_radius=5)
+
+    # Highlight
+    highlight_r = max(2, pupil_width // 6)
+    pygame.draw.circle(
+        surface,
+        (255, 255, 255),
+        (int(x - pupil_width * 0.18), int(y - pupil_height * 0.22)),
+        highlight_r,
+    )
+
+    # Flip the global variable for the next eye
     DRAWING_LEFT = not DRAWING_LEFT

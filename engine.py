@@ -16,7 +16,7 @@ class FaceEngine:
         self.screen = pygame.display.set_mode((0, 0))
         self.width, self.height = self.screen.get_size()
         self.center_x, self.center_y = self.width // 2, self.height // 2
-        pygame.mouse.set_visible(False)
+        # pygame.mouse.set_visible(False)
         self.clock = pygame.time.Clock()
 
         total_eyes_width = (EYE_WIDTH * 2) + EYE_GAP
@@ -126,6 +126,13 @@ class FaceEngine:
                     self.target_x, self.target_y = 0, 0
 
                 self.next_look_time = current_time + random.randint(1000, 3500)
+
+            if (size := getattr(context, "target_pos", None)) is not None:
+                offset_x = size[0] - self.center_x
+                offset_y = size[1] - self.center_y
+
+                self.target_x = max(-self.max_move_x, min(self.max_move_x, offset_x))
+                self.target_y = max(-self.max_move_y, min(self.max_move_y, offset_y))
 
             # Physics
             self.current_x += (self.target_x - self.current_x) * SMOOTHING_SPEED
