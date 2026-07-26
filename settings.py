@@ -8,9 +8,4 @@ EYE_HEIGHT = 120
 EYE_GAP = 20       
 
 # Animation Settings
-SMOOTHING_SPEED = 0.08
 FPS = 60
-
-# Screen Padding
-SCREEN_PADDING_X = 40
-SCREEN_PADDING_Y = 30

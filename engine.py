@@ -30,9 +30,6 @@ class FaceEngine:
                 self.state_manager.register_state(state)
 
         self.next_look_time = pygame.time.get_ticks() + 1000
-        self.next_blink_time = pygame.time.get_ticks() + 4500
-        self.is_blinking = False
-        self.blink_start_time = 0
 
     def trigger_expression(self, name, context):
         """Helper to switch expressions based on context data."""
@@ -85,9 +82,8 @@ class FaceEngine:
             # Render
             self.screen.fill(BLACK)
 
-            # Draw exactly in the center without current_x / current_y offsets
-            left_x = self.center_x - (EYE_WIDTH // 2) - (EYE_GAP // 2)
-            base_y = self.center_y
+            face_x = self.center_x
+            face_y = self.center_y
 
             # Determine target expression from Context
             target_name = context.expression_override or self.active_expression_name
@@ -97,8 +93,8 @@ class FaceEngine:
                 draw_func = expression_data["draw_fn"]
                 draw_func(
                     self.screen,
-                    left_x,
-                    base_y,
+                    face_x,
+                    face_y,
                     EYE_WIDTH,
                     current_eye_height,
                     context.color,
