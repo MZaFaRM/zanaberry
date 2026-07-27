@@ -4,7 +4,6 @@ import pygame
 
 from core.states.utils import check_blink
 
-# Store the smoothed target globally so it persists across frames
 SMOOTH_MX, SMOOTH_MY = None, None
 
 
@@ -13,11 +12,9 @@ def draw_tracking(surface, x, y, face_width, face_height, color):
 
     mx, my = pygame.mouse.get_pos()
 
-    # Initialize on the very first frame to prevent teleporting from (0,0)
     if SMOOTH_MX is None or SMOOTH_MY is None:
         SMOOTH_MX, SMOOTH_MY = mx, my
 
-    # LERP: Move the smoothed coordinates 15% closer to the real coordinates every frame.
     smoothing_factor = 0.15
     SMOOTH_MX += (mx - SMOOTH_MX) * smoothing_factor
     SMOOTH_MY += (my - SMOOTH_MY) * smoothing_factor
@@ -29,11 +26,13 @@ def draw_tracking(surface, x, y, face_width, face_height, color):
     line_w = 6
 
     if check_blink():
+        # Draw closed eyes
         for ex in [x - eye_offset, x + eye_offset]:
             pygame.draw.line(
                 surface, color, (ex - r, eye_y), (ex + r, eye_y), width=line_w
             )
     else:
+        # Draw open, tracking eyes
         for ex in [x - eye_offset, x + eye_offset]:
             pygame.draw.circle(surface, color, (ex, eye_y), r, width=line_w)
 

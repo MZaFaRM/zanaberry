@@ -65,9 +65,8 @@ class FaceEngine:
 
             current_eye_height = FACE_HEIGHT
 
-            # Random Behaviors (Expressions only, movement removed)
+            # Random Behaviors
             if current_time > self.next_look_time:
-                # Iterate through whatever expressions the states injected this frame
                 for name, data in context.expressions.items():
                     if (
                         name != self.default_expression
@@ -77,7 +76,7 @@ class FaceEngine:
                         self.trigger_expression(name, context)
                         break
 
-                self.next_look_time = current_time + random.randint(1000, 3500)
+                self.next_look_time = current_time + random.randint(2000, 4500)
 
             # Render
             self.screen.fill(BLACK)
